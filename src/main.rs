@@ -8,7 +8,6 @@ mod types;
 mod utils;
 
 use telegram_bot::Api;
-use telegram_bot::CanSendMessage;
 
 use crate::app_struct::App;
 use crate::utils::parse_group;
@@ -17,9 +16,11 @@ use crate::utils::token_path;
 
 use anyhow::Result;
 
+use self::app_struct::GroupOrSupergroup;
 use self::revive::try_restart_app;
 use self::run::run_app;
 use self::utils::group_path;
+use self::utils::parse_supergroup;
 
 const STARTUP_HELP_MESSAGE: &str = "Hallo, schreibe \"schmot\" um mich zu nutzen!";
 
@@ -28,10 +29,12 @@ async fn main() -> Result<()> {
     env_logger::init();
     let token = read_data(token_path()?)?;
     let group_raw = read_data(group_path()?)?;
-    let group = parse_group(group_raw)?;
+    let group = parse_group(group_raw.clone())
+        .map(GroupOrSupergroup::Group)
+        .or_else(|_| parse_supergroup(group_raw).map(GroupOrSupergroup::Supergroup))?;
     let api = Api::new(token.trim());
 
-    api.send(group.clone().text(STARTUP_HELP_MESSAGE)).await?;
+    //api.send(group.clone().text(STARTUP_HELP_MESSAGE)).await?;
 
     let mut stream = api.stream();
     let mut app = App::new(api, group);

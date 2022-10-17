@@ -2,12 +2,12 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use telegram_bot::{DeleteMessage, EditMessageText, Supergroup, ToChatRef, ToMessageId};
+use telegram_bot::{DeleteMessage, EditMessageText, Group, Supergroup, ToChatRef, ToMessageId};
 
 use tokio::time::delay_for;
 
 use crate::app_struct::App;
-use crate::serialization::GroupSerialize;
+use crate::serialization::{GroupSerialize, SupergroupSerialize};
 
 use anyhow::anyhow;
 use anyhow::Error;
@@ -32,8 +32,8 @@ pub fn group_path() -> Result<PathBuf> {
     join_with_app_data_dir("GROUP")
 }
 
-pub fn app_state_path() -> Result<PathBuf> {
-    join_with_app_data_dir("APPSTATE")
+pub fn app_state_path(group_name: String) -> Result<PathBuf> {
+    join_with_app_data_dir(&format!("APPSTATE-{group_name}"))
 }
 
 pub fn read_data(path: PathBuf) -> Result<String> {
@@ -43,9 +43,15 @@ pub fn read_data(path: PathBuf) -> Result<String> {
     Ok(data)
 }
 
-pub fn parse_group(string_data: String) -> Result<Supergroup> {
-    serde_json::from_str::<GroupSerialize>(&string_data)
+pub fn parse_supergroup(string_data: String) -> Result<Supergroup> {
+    serde_json::from_str::<SupergroupSerialize>(&string_data)
         .map(Into::<Supergroup>::into)
+        .map_err(Error::from)
+}
+
+pub fn parse_group(string_data: String) -> Result<Group> {
+    serde_json::from_str::<GroupSerialize>(&string_data)
+        .map(Into::<Group>::into)
         .map_err(Error::from)
 }
 

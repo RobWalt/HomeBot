@@ -1,19 +1,18 @@
-use anyhow::anyhow;
-use anyhow::Result;
-use serde::{Deserialize, Serialize};
-use telegram_bot::Supergroup;
-
-use crate::serialization::GroupSerialize;
+use crate::serialization::GroupOrSupergroupSerialze;
 use crate::types::link_store::LinkStore;
 use crate::utils::app_state_path;
 use crate::utils::read_data;
 use crate::utils::save_data;
+use anyhow::anyhow;
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
 
 use super::App;
+use super::GroupOrSupergroup;
 
 #[derive(Serialize, Deserialize)]
 pub struct AppSerialize {
-    pub group: GroupSerialize,
+    pub group: GroupOrSupergroupSerialze,
     pub link_store: LinkStore,
 }
 
@@ -23,13 +22,13 @@ impl App {
             group, link_store, ..
         } = self;
 
-        let group = GroupSerialize::from(group.clone());
+        let group = GroupOrSupergroupSerialze::from(group.clone());
         let data = AppSerialize {
             group,
             link_store: link_store.clone(),
         };
 
-        let save_path = app_state_path()?;
+        let save_path = app_state_path(self.group.title())?;
         let dir_path = save_path
             .parent()
             .ok_or_else(|| anyhow!("APPSTATE parent dir not found"))?;
@@ -42,9 +41,9 @@ impl App {
     }
 
     pub fn load(&mut self) -> Result<()> {
-        let data = read_data(app_state_path()?)?;
+        let data = read_data(app_state_path(self.group.title())?)?;
         let AppSerialize { group, link_store } = serde_json::from_str(&data)?;
-        let group = Supergroup::from(group);
+        let group = GroupOrSupergroup::from(group);
         self.group = group;
         self.link_store = link_store;
         Ok(())

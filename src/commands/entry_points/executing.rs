@@ -2,7 +2,7 @@ use crate::app_struct::app_state::app_command::archive_link::ArchiveLinkState;
 use crate::app_struct::app_state::app_command::main_menu::MainMenuState;
 use crate::app_struct::app_state::app_command::view_link::ViewLinkState;
 use crate::app_struct::app_state::app_command::AppCommand;
-use crate::app_struct::App;
+use crate::app_struct::{App, GroupOrSupergroup};
 use crate::commands::archive_link::entry_point::{
     handle_archive_link_button_presses, handle_archive_link_texts,
 };
@@ -40,7 +40,12 @@ async fn handle_executing_command_message(
     message: Message,
     app_command: AppCommand,
 ) -> Result<()> {
-    if let MessageChat::Supergroup(g) = message.chat {
+    let maybe_group = match message.chat {
+        MessageChat::Group(g) => Some(GroupOrSupergroup::Group(g)),
+        MessageChat::Supergroup(s) => Some(GroupOrSupergroup::Supergroup(s)),
+        _ => None,
+    };
+    if let Some(g) = maybe_group {
         if g.eq(&app.group) {
             if let MessageKind::Text { ref data, .. } = message.kind {
                 match app_command {

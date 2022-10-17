@@ -9,12 +9,17 @@ use crate::types::general::Link;
 
 use telegram_bot::{Message, MessageChat, MessageKind};
 
-use crate::app_struct::App;
+use crate::app_struct::{App, GroupOrSupergroup};
 use anyhow::Result;
 
 pub async fn handle_starting_command(app: &mut App, message: Message) -> Result<()> {
-    match message.chat.clone() {
-        MessageChat::Supergroup(g) if g.eq(&app.group) => {
+    let maybe_group = match message.chat {
+        MessageChat::Group(g) => Some(GroupOrSupergroup::Group(g)),
+        MessageChat::Supergroup(s) => Some(GroupOrSupergroup::Supergroup(s)),
+        _ => None,
+    };
+    if let Some(g) = maybe_group {
+        if g.eq(&app.group) {
             app.delete_msg(message.id).await?;
             match message.kind {
                 MessageKind::Text { ref data, .. } if is_schmot_command(data) => {
@@ -36,9 +41,6 @@ pub async fn handle_starting_command(app: &mut App, message: Message) -> Result<
                     // unhandled
                 }
             }
-        }
-        _ => {
-            // unhandled
         }
     }
     Ok(())

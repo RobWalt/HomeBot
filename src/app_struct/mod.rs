@@ -2,8 +2,8 @@ pub mod app_state;
 pub mod serialization;
 
 use telegram_bot::{
-    Api, CanSendMessage, DeleteMessage, EditMessageReplyMarkup, EditMessageText, MessageId,
-    MessageOrChannelPost, ReplyMarkup, Supergroup, ToMessageId,
+    Api, CanSendMessage, DeleteMessage, EditMessageReplyMarkup, EditMessageText, Group, MessageId,
+    MessageOrChannelPost, ReplyMarkup, Supergroup, ToChatRef, ToMessageId,
 };
 
 use crate::types::link_store::LinkStore;
@@ -12,16 +12,40 @@ use anyhow::Result;
 
 use self::app_state::AppState;
 
+#[derive(Clone, PartialEq, Eq)]
+pub enum GroupOrSupergroup {
+    Group(Group),
+    Supergroup(Supergroup),
+}
+
+impl GroupOrSupergroup {
+    pub fn title(&self) -> String {
+        match self {
+            GroupOrSupergroup::Group(g) => g.title.clone(),
+            GroupOrSupergroup::Supergroup(s) => s.title.clone(),
+        }
+    }
+}
+
+impl ToChatRef for GroupOrSupergroup {
+    fn to_chat_ref(&self) -> telegram_bot::ChatRef {
+        match self {
+            GroupOrSupergroup::Group(group) => group.to_chat_ref(),
+            GroupOrSupergroup::Supergroup(supergroup) => supergroup.to_chat_ref(),
+        }
+    }
+}
+
 pub struct App {
     pub api: Api,
-    pub group: Supergroup,
+    pub group: GroupOrSupergroup,
     pub active_msg: Option<MessageId>,
     pub link_store: LinkStore,
     pub state: AppState,
 }
 
 impl App {
-    pub fn new(api: Api, group: Supergroup) -> Self {
+    pub fn new(api: Api, group: GroupOrSupergroup) -> Self {
         let mut app = Self {
             api,
             group,
