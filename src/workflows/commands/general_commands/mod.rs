@@ -1,4 +1,5 @@
-mod view_links;
+mod links;
+mod recipes;
 
 use anyhow::Result;
 use teloxide::dispatching::HandlerExt;
@@ -15,8 +16,10 @@ use crate::workflows::HandlerType;
 pub enum StartingCommands {
     #[command(description = "Zeige diese Nachricht an")]
     Help,
-    #[command(description = "Suche einen archivierten Link")]
+    #[command(description = "Suche oder bearbeite gespeicherte Links")]
     Links,
+    #[command(description = "Finde oder speichere Rezepte")]
+    Recipe,
 }
 
 pub fn create_handler() -> HandlerType {
@@ -32,11 +35,11 @@ async fn handle_starting_commands(
     cmd: StartingCommands,
     last_message: LastMessageDialogue,
 ) -> Result<()> {
+    log::info!("Executing");
     match cmd {
         StartingCommands::Help => execute_help(bot, msg).await,
-        StartingCommands::Links => {
-            view_links::enter_dialogue(bot, dialogue, msg, last_message).await
-        }
+        StartingCommands::Links => links::enter_dialogue(bot, dialogue, msg, last_message).await,
+        StartingCommands::Recipe => recipes::enter_dialogue(bot, dialogue, msg, last_message).await,
     }
 }
 

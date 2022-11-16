@@ -1,6 +1,8 @@
 mod app;
 mod links;
 mod persistence;
+mod recipe;
+mod utils;
 mod workflows;
 
 use teloxide::prelude::*;

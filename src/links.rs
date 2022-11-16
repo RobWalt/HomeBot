@@ -14,6 +14,7 @@ pub struct LinkCategory(pub String);
 #[derive(Debug, Clone, Default)]
 pub enum NewLinkStateWaitingFor {
     #[default]
+    Entry,
     Category,
     NewCategory,
     Name(LinkCategory),
@@ -31,3 +32,17 @@ pub enum ViewLinkStateWaitingFor {
 
 pub type ViewLinkStateStorage = InMemStorage<ViewLinkStateWaitingFor>;
 pub type ViewLinkDialogue = Dialogue<ViewLinkStateWaitingFor, ViewLinkStateStorage>;
+
+#[derive(Debug, Clone, Default)]
+pub enum EditLinkStateWaitingFor {
+    #[default]
+    ChoosePath,
+    Category,
+    CategoryNewName(LinkCategory),
+    NameCategory,
+    Name(LinkCategory),
+    NameNewName(LinkCategory, LinkName),
+}
+
+pub type EditLinkStateStorage = InMemStorage<EditLinkStateWaitingFor>;
+pub type EditLinkDialogue = Dialogue<EditLinkStateWaitingFor, EditLinkStateStorage>;
